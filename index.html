@@ -3,7 +3,7 @@
 <head>
     <link rel="icon" type="image/png" href="favicon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Dunia Permainan Edukasi</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,18 +15,22 @@
             overflow: hidden; 
             font-family: 'Fredoka', sans-serif; 
             background: #F0F9FF; 
-            touch-action: none;
+            touch-action: none; 
             user-select: none;
+            -webkit-user-select: none;
             cursor: default; 
             width: 100vw;
             height: 100vh;
+            position: fixed;
         }
+        
         canvas { 
             display: block; 
-            image-rendering: -webkit-optimize-contrast;
+            image-rendering: auto;
             width: 100%;
             height: 100%;
-            background-color: #F0F9FF; /* Konsistensi warna latar untuk cegah flicker */
+            background-color: #F0F9FF;
+            touch-action: none;
         }
         
         #ui-layer {
@@ -38,7 +42,7 @@
             pointer-events: none;
             display: flex;
             flex-direction: column;
-            padding: 15px;
+            padding: env(safe-area-inset-top, 15px) 15px 15px 15px;
             z-index: 10;
         }
 
@@ -46,9 +50,9 @@
         
         .info-card {
             background: white;
-            border-radius: 15px;
-            padding: 8px 15px;
-            box-shadow: 0 4px 0px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            padding: 6px 10px;
+            box-shadow: 0 3px 0px rgba(0,0,0,0.05);
             border: 2px solid #E0F2FE;
             white-space: nowrap;
         }
@@ -59,21 +63,21 @@
             left: 50%;
             transform: translate(-50%, -50%) scale(0.8);
             background: white;
-            padding: 25px;
-            border-radius: 30px;
+            padding: 20px;
+            border-radius: 25px;
             text-align: center;
-            box-shadow: 0 15px 0px #F1F5F9;
+            box-shadow: 0 10px 0px #F1F5F9;
             display: none;
             pointer-events: auto;
-            border: 6px solid #FBBF24;
+            border: 5px solid #FBBF24;
             z-index: 100;
-            width: 90%;
-            max-width: 380px;
+            width: 80%;
+            max-width: 300px;
         }
 
         .btn-pop {
             background: #4ADE80;
-            border-bottom: 5px solid #16A34A;
+            border-bottom: 4px solid #16A34A;
             color: white;
             font-weight: 900;
             transition: all 0.1s;
@@ -81,18 +85,11 @@
 
         .btn-pop:active {
             border-bottom-width: 0;
-            transform: translateY(5px);
+            transform: translateY(4px);
         }
 
-        .btn-settings {
-            background: #CBD5E1;
-            border-bottom: 4px solid #94A3B8;
-        }
-
-        .btn-reset-top {
-            background: #F87171;
-            border-bottom: 4px solid #B91C1C;
-        }
+        .btn-settings { background: #CBD5E1; border-bottom: 3px solid #94A3B8; }
+        .btn-reset-top { background: #F87171; border-bottom: 3px solid #B91C1C; }
 
         @keyframes pulse-bg {
             0% { background-color: #F0F9FF; }
@@ -100,19 +97,18 @@
             100% { background-color: #F0F9FF; }
         }
         .win-bg { animation: pulse-bg 1s infinite; }
-        .win-bg canvas { animation: pulse-bg 1s infinite; }
         
-        .float-anim {
-            animation: floating 3s ease-in-out infinite;
-        }
+        .float-anim { animation: floating 3s ease-in-out infinite; }
         @keyframes floating {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-8px); }
         }
 
-        @media (max-width: 640px) {
-            .info-card { padding: 5px 10px; font-size: 0.75rem; }
-            #instruction-container { max-width: 70%; }
+        /* Skala UI untuk HP */
+        @media (max-width: 480px) {
+            .info-card { font-size: 0.75rem; padding: 4px 6px; }
+            #instruction-container { max-width: 90%; }
+            .btn-pop { padding: 8px !important; }
         }
     </style>
 </head>
@@ -120,40 +116,40 @@
 
 <div id="ui-layer">
     <div class="flex justify-between items-start w-full">
-        <div class="flex gap-1 sm:gap-2">
-            <button id="bgm-toggle" class="interactive btn-pop btn-settings p-2 sm:p-3 rounded-xl shadow-md flex items-center justify-center">
-                <span id="bgm-icon" class="text-xs sm:text-base">🎵</span>
+        <div class="flex gap-1.5">
+            <button id="bgm-toggle" class="interactive btn-pop btn-settings p-2.5 rounded-lg shadow-sm flex items-center justify-center">
+                <span id="bgm-icon" class="text-lg">🎵</span>
             </button>
-            <button id="sfx-toggle" class="interactive btn-pop btn-settings p-2 sm:p-3 rounded-xl shadow-md flex items-center justify-center">
-                <span id="sfx-icon" class="text-xs sm:text-base">🔊</span>
+            <button id="sfx-toggle" class="interactive btn-pop btn-settings p-2.5 rounded-lg shadow-sm flex items-center justify-center">
+                <span id="sfx-icon" class="text-lg">🔊</span>
             </button>
         </div>
 
-        <div class="flex items-center gap-1 sm:gap-2">
+        <div class="flex items-center gap-1.5">
             <div id="lvl-card" class="info-card font-black text-blue-600">
-                Lvl: <span id="level-display">1</span>
+                Lv: <span id="level-display">1</span>
             </div>
             <div id="scr-card" class="info-card font-black text-orange-500">
                 ⭐ <span id="score">0</span>
             </div>
-            <button id="reset-btn" class="interactive btn-pop btn-reset-top p-2 sm:p-3 rounded-xl shadow-md flex items-center justify-center">
-                <span class="text-xs sm:text-base">🔄</span>
+            <button id="reset-btn" class="interactive btn-pop btn-reset-top p-2.5 rounded-lg shadow-sm flex items-center justify-center">
+                <span class="text-lg">🔄</span>
             </button>
         </div>
     </div>
     
-    <div class="flex flex-col items-center mt-3">
-        <div id="instruction-container" class="info-card text-slate-700 text-center w-full max-w-md shadow-md">
+    <div class="flex flex-col items-center mt-2">
+        <div id="instruction-container" class="info-card text-slate-700 text-center w-full max-w-xs shadow-sm">
             <div id="instruction" class="font-bold text-xs sm:text-sm">Ayo Bermain!</div>
         </div>
     </div>
 </div>
 
 <div id="message-box">
-    <div class="text-5xl sm:text-6xl mb-4 float-anim">🏆</div>
-    <h1 id="msg-title" class="text-2xl sm:text-3xl font-black text-yellow-500 mb-2">HEBAT! 🌟</h1>
-    <p id="msg-body" class="text-base sm:text-lg text-slate-500 mb-6 font-bold">Kamu pintar sekali!</p>
-    <button id="next-btn" class="btn-pop py-3 px-10 rounded-full text-lg w-full">LANJUT! 🚀</button>
+    <div class="text-5xl mb-3 float-anim">🏆</div>
+    <h1 id="msg-title" class="text-xl font-black text-yellow-500 mb-1">HEBAT! 🌟</h1>
+    <p id="msg-body" class="text-sm text-slate-500 mb-4 font-bold">Kamu pintar sekali!</p>
+    <button id="next-btn" class="btn-pop py-3 px-8 rounded-full text-base w-full">LANJUT! 🚀</button>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -277,7 +273,7 @@
     function getLevelConfig(type) {
         if (type === 'math-transition') return generateMathChallenge(true);
         const difficulty = Math.floor(currentLevel / 3); 
-        const itemCount = Math.min(3 + difficulty, 6);
+        const itemCount = Math.min(3 + difficulty, 4); // Kurangi jumlah di HP agar tidak padat
 
         switch(type) {
             case 'color-match':
@@ -289,17 +285,17 @@
             case 'puzzle-shape':
                 return { type: 'puzzle-shape', title: "Lengkapi Puzzle Bentuk! 🧩", items: [...gameShapes].sort(() => Math.random() - 0.5).slice(0, itemCount) };
             case 'puzzle-number':
-                return { type: 'puzzle-number', title: "Susun Puzzle Angka! 🔢", items: [...gameNumbers].slice(0, Math.min(4 + difficulty, 8)), isNumber: true };
+                return { type: 'puzzle-number', title: "Susun Puzzle Angka! 🔢", items: [...gameNumbers].slice(0, Math.min(4 + difficulty, 5)), isNumber: true };
             case 'puzzle-image':
                 return { type: 'puzzle-image', title: "Pasang Puzzle Gambar! 🖼️", items: [...gameImages].sort(() => Math.random() - 0.5).slice(0, itemCount) };
             case 'catch-color':
-                return { type: 'catch-color', title: "Tangkap Bola Sesuai Warna! 🏀", targetCount: 3 + Math.min(currentLevel, 3) };
+                return { type: 'catch-color', title: "Tangkap Bola Sesuai Warna! 🏀", targetCount: 3 + Math.min(currentLevel, 2) };
             case 'catch-number':
-                return { type: 'catch-number', title: "Tangkap Angka yang Benar! 🔢", targetCount: 3 + Math.min(currentLevel, 3) };
+                return { type: 'catch-number', title: "Tangkap Angka yang Benar! 🔢", targetCount: 3 + Math.min(currentLevel, 2) };
             case 'shoot-color':
-                return { type: 'shoot-color', title: "Tembak Gelembung Warna! 🎯", targetCount: 3 + Math.min(currentLevel, 3) };
+                return { type: 'shoot-color', title: "Tembak Gelembung Warna! 🎯", targetCount: 3 + Math.min(currentLevel, 2) };
             case 'shoot-shape':
-                return { type: 'shoot-shape', title: "Tembak Bentuk yang Benar! 🏹", targetCount: 3 + Math.min(currentLevel, 3) };
+                return { type: 'shoot-shape', title: "Tembak Bentuk yang Benar! 🏹", targetCount: 3 + Math.min(currentLevel, 2) };
             default:
                 return generateMathChallenge(false);
         }
@@ -307,36 +303,35 @@
 
     function generateMathChallenge(isTransition) {
         const leftItems = []; const rightItems = [];
-        const maxVal = Math.min(5 + currentLevel, 20);
-        let a = Math.floor(Math.random() * (maxVal/2)) + 1; 
-        let b = Math.floor(Math.random() * (maxVal/2)) + 1; 
+        let a = Math.floor(Math.random() * 5) + 1; 
+        let b = Math.floor(Math.random() * 5) + 1; 
         let result = a + b; 
         leftItems.push({ id: 0, l: `${a} + ${b}`, isMath: true });
         rightItems.push({ id: 0, r: `${result}`, isMath: true });
         let decoy;
-        do { decoy = Math.floor(Math.random() * maxVal) + 1; } while (decoy === result);
+        do { decoy = Math.floor(Math.random() * 10) + 1; } while (decoy === result);
         rightItems.push({ id: 99, r: `${decoy}`, isMath: true });
         return { type: 'math', title: isTransition ? `Bonus Berhitung! 🔢` : `Pilih Jawaban yang Benar! ➕`, leftItems: leftItems, rightItems: rightItems.sort(() => Math.random() - 0.5) };
     }
 
     function createTrail(x, y) {
         const hue = (frame * 5) % 360;
-        trailParticles.push({ x, y, vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, size: (Math.random() * 6 + 3) * scaleFactor, alpha: 1, color: `hsl(${hue}, 90%, 65%)` });
+        trailParticles.push({ x, y, vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, size: (Math.random() * 5 + 2) * scaleFactor, alpha: 1, color: `hsl(${hue}, 90%, 65%)` });
     }
 
     function createExplosion(x, y, color) {
-        for (let i = 0; i < 20; i++) {
-            particles.push({ x, y, vx: (Math.random() - 0.5) * 10 * scaleFactor, vy: (Math.random() - 0.5) * 10 * scaleFactor, size: (Math.random() * 6 + 3) * scaleFactor, alpha: 1, decay: Math.random() * 0.02 + 0.02, color: color || '#FFD700' });
+        for (let i = 0; i < 15; i++) {
+            particles.push({ x, y, vx: (Math.random() - 0.5) * 8 * scaleFactor, vy: (Math.random() - 0.5) * 8 * scaleFactor, size: (Math.random() * 5 + 2) * scaleFactor, alpha: 1, decay: Math.random() * 0.02 + 0.02, color: color || '#FFD700' });
         }
     }
 
-    function triggerScreenShake(intensity = 10) {
-        gsap.to(canvasOffset, { x: intensity, y: intensity, duration: 0.05, repeat: 5, yoyo: true, onComplete: () => { canvasOffset.x = 0; canvasOffset.y = 0; } });
+    function triggerScreenShake(intensity = 6) {
+        gsap.to(canvasOffset, { x: intensity, y: intensity, duration: 0.05, repeat: 4, yoyo: true, onComplete: () => { canvasOffset.x = 0; canvasOffset.y = 0; } });
     }
 
     function triggerItemShake(node) {
-        sounds.error(); createExplosion(node.x, node.y, '#94A3B8'); triggerScreenShake(6);
-        gsap.to(node, { visualX: 12, duration: 0.05, repeat: 5, yoyo: true, onComplete: () => { node.visualX = 0; if (currentConfig.type.startsWith('puzzle')) { gsap.to(node, { x: node.homeX, y: node.homeY, scale: 1, duration: 0.5, ease: "back.out(1.2)" }); } else { gsap.to(node, { scale: 1, duration: 0.3 }); } } });
+        sounds.error(); createExplosion(node.x, node.y, '#94A3B8'); triggerScreenShake(4);
+        gsap.to(node, { visualX: 10, duration: 0.05, repeat: 4, yoyo: true, onComplete: () => { node.visualX = 0; if (currentConfig.type.startsWith('puzzle')) { gsap.to(node, { x: node.homeX, y: node.homeY, scale: 1, duration: 0.5, ease: "back.out(1.2)" }); } else { gsap.to(node, { scale: 1, duration: 0.3 }); } } });
     }
 
     function resize() {
@@ -344,9 +339,13 @@
         height = window.innerHeight;
         canvas.width = width;
         canvas.height = height;
-        scaleFactor = Math.min(width, height) / 500;
-        if (scaleFactor > 1.4) scaleFactor = 1.4;
-        if (scaleFactor < 0.6) scaleFactor = 0.6;
+        
+        // Skala Adaptif Berbasis HP
+        const baseDim = Math.min(width, height);
+        scaleFactor = baseDim / 380; // Ditingkatkan sedikit untuk visibilitas
+        if (scaleFactor > 1.1) scaleFactor = 1.1;
+        if (scaleFactor < 0.75) scaleFactor = 0.75;
+        
         initLevel(currentConfig ? currentConfig.type : null);
     }
 
@@ -368,22 +367,27 @@
         levelEl.innerText = currentLevel;
         instructionEl.innerText = currentConfig.title;
         
+        const isSmallHP = width < 360;
+
         if (currentConfig.type.startsWith('catch') || currentConfig.type.startsWith('shoot')) {
             updateTargetValue();
         } else if (currentConfig.type.startsWith('puzzle')) {
             const items = currentConfig.items;
             const shuffledItems = [...items].sort(() => Math.random() - 0.5);
             
+            // Jarak slot puzzle lebih rapat di HP
+            const spacing = (isSmallHP ? 55 : 65) * scaleFactor;
+            const startX = width/2 - ((items.length-1) * spacing)/2;
+            const centerY = height/2 - 10 * scaleFactor;
+
             items.forEach((item, i) => {
-                const spacing = (width < 600 ? 55 : 100) * scaleFactor;
-                const startX = width/2 - ((items.length-1) * spacing)/2;
                 let itemColor = getNumberColor(item);
                 puzzleSlots.push({ 
                     x: startX + i * spacing, 
-                    y: height/2 - 20, 
+                    y: centerY, 
                     content: item, 
                     matched: false, 
-                    radius: (currentConfig.isNumber ? 30 : 35) * scaleFactor, 
+                    radius: (currentConfig.isNumber ? 24 : 28) * scaleFactor, 
                     color: itemColor, 
                     isNumber: !!currentConfig.isNumber 
                 });
@@ -393,42 +397,42 @@
                 const pieceSpacing = width / (items.length + 1);
                 let itemColor = getNumberColor(item);
                 nodes.push({ 
-                    x: pieceSpacing * (i + 1), y: height - 120 * scaleFactor, 
-                    homeX: pieceSpacing * (i + 1), homeY: height - 120 * scaleFactor, 
+                    x: pieceSpacing * (i + 1), y: height - 100 * scaleFactor, 
+                    homeX: pieceSpacing * (i + 1), homeY: height - 100 * scaleFactor, 
                     content: item, matched: false, 
-                    radius: (currentConfig.isNumber ? 28 : 32) * scaleFactor, 
+                    radius: (currentConfig.isNumber ? 24 : 28) * scaleFactor, 
                     scale: 0, 
                     offset: Math.random() * Math.PI * 2, 
                     color: itemColor, 
                     isNumber: !!currentConfig.isNumber, visualX: 0
                 });
             });
-            gsap.to(nodes, { scale: 1, duration: 0.8, stagger: 0.1, ease: "back.out(1.7)" });
+            gsap.to(nodes, { scale: 1, duration: 0.6, stagger: 0.08, ease: "back.out(1.5)" });
         } else {
-            const radius = (width < 600 ? 35 : 55) * scaleFactor;
+            const radius = (isSmallHP ? 28 : 34) * scaleFactor;
+            const spacing = (isSmallHP ? 85 : 105) * scaleFactor;
+            
             if (currentConfig.type === 'math') {
                 const lStartY = height / 2 + 20;
                 currentConfig.leftItems.forEach((item, i) => {
-                    nodes.push({ x: width * 0.3, y: lStartY, baseY: lStartY, content: item.l, id: item.id, matched: false, scale: 0, offset: Math.random() * Math.PI * 2, radius, visualX: 0, isMath: true });
+                    nodes.push({ x: width * 0.28, y: lStartY, baseY: lStartY, content: item.l, id: item.id, matched: false, scale: 0, offset: Math.random() * Math.PI * 2, radius, visualX: 0, isMath: true });
                 });
-                const rStartY = height / 2 - (currentConfig.rightItems.length > 1 ? 60 : 0);
-                const rSpacing = (width < 600 ? 100 : 140) * scaleFactor;
+                const rStartY = height / 2 - (currentConfig.rightItems.length > 1 ? 50 : 0);
                 currentConfig.rightItems.forEach((item, i) => {
-                    targets.push({ x: width * 0.7, y: rStartY + i * rSpacing, baseY: rStartY + i * rSpacing, content: item.r, id: item.id, matched: false, scale: 0, offset: Math.random() * Math.PI * 2, radius: radius + 5, isMath: true });
+                    targets.push({ x: width * 0.72, y: rStartY + i * spacing, baseY: rStartY + i * spacing, content: item.r, id: item.id, matched: false, scale: 0, offset: Math.random() * Math.PI * 2, radius: radius + 4, isMath: true });
                 });
             } else {
                 const count = currentConfig.items.length;
-                const spacing = (width < 600 ? 90 : 140) * scaleFactor;
                 const startY = (height - (count - 1) * spacing) / 2 + 40;
                 currentConfig.items.forEach((item, i) => {
                     nodes.push({ x: width * 0.25, y: startY + i * spacing, baseY: startY + i * spacing, content: item.l, id: item.id, matched: false, isColor: !!item.isColor, scale: 0, offset: Math.random() * Math.PI * 2, radius, visualX: 0 });
                 });
                 const shuffledRight = [...currentConfig.items].sort(() => Math.random() - 0.5);
                 shuffledRight.forEach((item, i) => {
-                    targets.push({ x: width * 0.75, y: startY + i * spacing, baseY: startY + i * spacing, content: item.r, id: item.id, matched: false, isColor: !!item.isColor, scale: 0, offset: Math.random() * Math.PI * 2, radius: radius + 5 });
+                    targets.push({ x: width * 0.75, y: startY + i * spacing, baseY: startY + i * spacing, content: item.r, id: item.id, matched: false, isColor: !!item.isColor, scale: 0, offset: Math.random() * Math.PI * 2, radius: radius + 4 });
                 });
             }
-            gsap.to([...nodes, ...targets], { scale: 1, duration: 0.8, stagger: 0.1, ease: "back.out(1.7)" });
+            gsap.to([...nodes, ...targets], { scale: 1, duration: 0.6, stagger: 0.08, ease: "back.out(1.5)" });
         }
     }
 
@@ -442,36 +446,36 @@
         frame++;
         if (currentConfig && (currentConfig.type.startsWith('catch') || currentConfig.type.startsWith('shoot')) && !levelComplete) {
             const isShootMode = currentConfig.type.startsWith('shoot');
-            const spawnRate = Math.max(20, (isShootMode ? 40 : 50) - (currentLevel * 2));
+            const spawnRate = Math.max(30, 60 - (currentLevel * 2));
             if (frame % spawnRate === 0) {
                 let value, color, isEmoji = false;
                 if (currentConfig.type.includes('color')) { value = gameColors[Math.floor(Math.random() * gameColors.length)]; color = value; }
                 else if (currentConfig.type.includes('shape')) { value = gameShapes[Math.floor(Math.random() * gameShapes.length)]; color = '#4D94FF'; isEmoji = true; }
                 else { const idx = Math.floor(Math.random() * 5); value = gameNumbers[idx]; color = numberColors[idx]; }
-                movingItems.push({ x: Math.random() * (width - 100) + 50, y: isShootMode ? height + 50 : -50, vy: (isShootMode ? -1 : 1) * (Math.random() * 2 + 2 + currentLevel*0.1) * scaleFactor, vx: isShootMode ? Math.sin(frame * 0.05) * 1.5 : 0, value, color, size: 30 * scaleFactor, isEmoji, rotation: (Math.random() - 0.5) * 0.05 });
+                movingItems.push({ x: Math.random() * (width - 50) + 25, y: isShootMode ? height + 40 : -40, vy: (isShootMode ? -1 : 1) * (Math.random() * 1.2 + 1.8 + currentLevel*0.08) * scaleFactor, vx: isShootMode ? Math.sin(frame * 0.04) * 1 : 0, value, color, size: 22 * scaleFactor, isEmoji, rotation: (Math.random() - 0.5) * 0.03 });
             }
             for (let i = movingItems.length - 1; i >= 0; i--) {
                 const item = movingItems[i]; item.y += item.vy; item.x += item.vx;
-                if (isShootMode) { if (item.y < -100) movingItems.splice(i, 1); }
+                if (isShootMode) { if (item.y < -80) movingItems.splice(i, 1); }
                 else { 
-                    const basketW = 100 * scaleFactor;
-                    if (item.y + item.size > height - 70 && item.x > mousePos.x - basketW/2 && item.x < mousePos.x + basketW/2) checkHit(item, i); 
-                    else if (item.y > height + 50) movingItems.splice(i, 1); 
+                    const basketW = 85 * scaleFactor;
+                    if (item.y + item.size > height - 60 && item.x > mousePos.x - basketW/2 && item.x < mousePos.x + basketW/2) checkHit(item, i); 
+                    else if (item.y > height + 40) movingItems.splice(i, 1); 
                 }
             }
         } else if (currentConfig && currentConfig.type.startsWith('puzzle')) {
-            nodes.forEach(n => { if (!n.matched && n !== activeNode) n.y = n.homeY + Math.sin(frame * 0.04 + n.offset) * 5; });
+            nodes.forEach(n => { if (!n.matched && n !== activeNode) n.y = n.homeY + Math.sin(frame * 0.05 + n.offset) * 4; });
         } else {
-            nodes.forEach(n => { if (!n.matched && n !== activeNode) n.y = n.baseY + Math.sin(frame * 0.04 + n.offset) * 8; });
-            targets.forEach(t => { if (!t.matched) t.y = t.baseY + Math.sin(frame * 0.04 + t.offset) * 8; });
+            nodes.forEach(n => { if (!n.matched && n !== activeNode) n.y = n.baseY + Math.sin(frame * 0.05 + n.offset) * 6; });
+            targets.forEach(t => { if (!t.matched) t.y = t.baseY + Math.sin(frame * 0.05 + t.offset) * 6; });
         }
-        trailParticles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.alpha -= 0.02; if (p.alpha <= 0) trailParticles.splice(i, 1); });
-        particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.vy += 0.2 * scaleFactor; p.alpha -= p.decay; if (p.alpha <= 0) particles.splice(i, 1); });
+        trailParticles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.alpha -= 0.025; if (p.alpha <= 0) trailParticles.splice(i, 1); });
+        particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.vy += 0.15 * scaleFactor; p.alpha -= p.decay; if (p.alpha <= 0) particles.splice(i, 1); });
     }
 
     function checkHit(item, index) {
         if (item.value === targetValue) { createExplosion(item.x, item.y, item.color); sounds.match(); progressCounter++; score += 10; scoreEl.innerText = score; updateTargetValue(); if (progressCounter >= currentConfig.targetCount) finishLevel(); }
-        else { sounds.error(); createExplosion(item.x, item.y, '#CBD5E1'); triggerScreenShake(8); }
+        else { sounds.error(); createExplosion(item.x, item.y, '#CBD5E1'); triggerScreenShake(5); }
         movingItems.splice(index, 1);
     }
 
@@ -481,17 +485,15 @@
             if (isMathTransition) {
                 document.getElementById('msg-title').innerText = "LUAR BIASA! 🌈";
                 document.getElementById('msg-body').innerText = "Kamu berhasil melewati rintangan!";
-                gsap.to('#message-box', { display: 'block', scale: 1, duration: 0.5, ease: "back.out(1.7)" });
+                gsap.to('#message-box', { display: 'block', scale: 1, duration: 0.4, ease: "back.out(1.5)" });
             } else { initLevel('math-transition'); }
-        }, 600);
+        }, 500);
     }
 
     function draw() {
         update();
         ctx.save();
         ctx.translate(canvasOffset.x, canvasOffset.y);
-        
-        // Perbaikan flicker: Selalu gunakan fillStyle dengan warna solid, bukan clearRect murni jika background CSS aktif
         ctx.fillStyle = levelComplete ? '#DCFCE7' : '#F0F9FF'; 
         ctx.fillRect(0, 0, width, height);
 
@@ -500,41 +502,41 @@
         if (currentConfig && (currentConfig.type.startsWith('catch') || currentConfig.type.startsWith('shoot'))) {
             ctx.globalAlpha = 1;
             if (!currentConfig.type.startsWith('shoot')) { 
-                const basketW = 100 * scaleFactor;
-                ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.roundRect(mousePos.x - basketW/2, height - 60, basketW, 40, [5, 5, 20, 20]); ctx.fill(); 
+                const basketW = 85 * scaleFactor;
+                ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.roundRect(mousePos.x - basketW/2, height - 50, basketW, 30, [4, 4, 15, 15]); ctx.fill(); 
             }
-            ctx.fillStyle = '#1e293b'; ctx.font = `bold ${18 * scaleFactor}px Fredoka`; ctx.textAlign = 'center';
+            ctx.fillStyle = '#1e293b'; ctx.font = `bold ${14 * scaleFactor}px Fredoka`; ctx.textAlign = 'center';
             let targetLabel = currentConfig.type.startsWith('shoot') ? "TEMBAK: " : "TANGKAP: ";
             
             if (currentConfig.type.includes('color')) { 
-                ctx.fillText(targetLabel, width/2 - 20, height - 120 * scaleFactor); 
-                ctx.fillStyle = targetValue; ctx.beginPath(); ctx.arc(width/2 + 50, height - 126 * scaleFactor, 15 * scaleFactor, 0, Math.PI * 2); ctx.fill(); 
+                ctx.fillText(targetLabel, width/2 - 15, height - 100 * scaleFactor); 
+                ctx.fillStyle = targetValue; ctx.beginPath(); ctx.arc(width/2 + 45, height - 105 * scaleFactor, 12 * scaleFactor, 0, Math.PI * 2); ctx.fill(); 
             } else if (currentConfig.type.includes('number')) { 
-                ctx.fillText(targetLabel, width/2 - 20, height - 120 * scaleFactor); 
-                ctx.fillStyle = getNumberColor(targetValue); ctx.font = `900 ${30 * scaleFactor}px Fredoka`; ctx.fillText(targetValue, width/2 + 50, height - 118 * scaleFactor); 
+                ctx.fillText(targetLabel, width/2 - 15, height - 100 * scaleFactor); 
+                ctx.fillStyle = getNumberColor(targetValue); ctx.font = `900 ${22 * scaleFactor}px Fredoka`; ctx.fillText(targetValue, width/2 + 45, height - 100 * scaleFactor); 
             } else { 
-                ctx.fillText(targetLabel + targetValue, width/2, height - 120 * scaleFactor); 
+                ctx.fillText(targetLabel + targetValue, width/2, height - 100 * scaleFactor); 
             }
 
-            ctx.fillStyle = '#64748B'; ctx.font = `bold ${14 * scaleFactor}px Fredoka`;
-            ctx.fillText(`${progressCounter} / ${currentConfig.targetCount}`, width/2, height - 90 * scaleFactor);
+            ctx.fillStyle = '#64748B'; ctx.font = `bold ${12 * scaleFactor}px Fredoka`;
+            ctx.fillText(`${progressCounter} / ${currentConfig.targetCount}`, width/2, height - 75 * scaleFactor);
 
             movingItems.forEach(item => { 
                 ctx.save(); ctx.translate(item.x, item.y); ctx.rotate(frame * item.rotation); 
                 if (currentConfig.type.includes('color')) { ctx.fillStyle = item.color; ctx.beginPath(); ctx.arc(0, 0, item.size, 0, Math.PI * 2); ctx.fill(); } 
-                else if (item.isEmoji || currentConfig.type.includes('shape')) { ctx.font = `${40 * scaleFactor}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(item.value, 0, 0); } 
-                else { ctx.font = `900 ${45 * scaleFactor}px Fredoka`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = item.color; ctx.fillText(item.value, 0, 0); } 
+                else if (item.isEmoji || currentConfig.type.includes('shape')) { ctx.font = `${28 * scaleFactor}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(item.value, 0, 0); } 
+                else { ctx.font = `900 ${32 * scaleFactor}px Fredoka`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = item.color; ctx.fillText(item.value, 0, 0); } 
                 ctx.restore(); 
             });
         } else if (currentConfig && currentConfig.type.startsWith('puzzle')) {
             puzzleSlots.forEach(slot => { 
                 ctx.save(); ctx.translate(slot.x, slot.y); 
-                const fontSize = (slot.isNumber ? 30 : 40) * scaleFactor;
+                const fontSize = (slot.isNumber ? 20 : 26) * scaleFactor;
                 if (!slot.matched) { 
-                    ctx.globalAlpha = 0.2; ctx.fillStyle = '#94A3B8'; ctx.beginPath(); ctx.arc(0, 0, slot.radius, 0, Math.PI * 2); ctx.fill(); 
+                    ctx.globalAlpha = 0.15; ctx.fillStyle = '#94A3B8'; ctx.beginPath(); ctx.arc(0, 0, slot.radius, 0, Math.PI * 2); ctx.fill(); 
                     ctx.font = `900 ${fontSize}px Fredoka`; ctx.fillStyle = slot.isNumber ? slot.color : '#64748B'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(slot.content, 0, 0); 
                 } else { 
-                    ctx.globalAlpha = 1; ctx.fillStyle = slot.isNumber ? slot.color : '#22C55E'; ctx.beginPath(); ctx.arc(0, 0, slot.radius + 4, 0, Math.PI * 2); ctx.fill(); 
+                    ctx.globalAlpha = 1; ctx.fillStyle = slot.isNumber ? slot.color : '#22C55E'; ctx.beginPath(); ctx.arc(0, 0, slot.radius + 2, 0, Math.PI * 2); ctx.fill(); 
                     ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(0, 0, slot.radius, 0, Math.PI * 2); ctx.fill(); 
                     ctx.font = `900 ${fontSize}px Fredoka`; ctx.fillStyle = slot.isNumber ? slot.color : 'black'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(slot.content, 0, 0); 
                 } ctx.restore(); 
@@ -542,26 +544,26 @@
             nodes.forEach(node => { 
                 if (node.matched) return; 
                 ctx.save(); ctx.translate(node.x + (node.visualX || 0), node.y); ctx.scale(node.scale, node.scale); 
-                ctx.fillStyle = 'white'; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.1)'; ctx.beginPath(); ctx.arc(0, 0, node.radius, 0, Math.PI * 2); ctx.fill(); 
-                const fontSize = (node.isNumber ? 28 : 35) * scaleFactor;
+                ctx.fillStyle = 'white'; ctx.shadowBlur = 6; ctx.shadowColor = 'rgba(0,0,0,0.1)'; ctx.beginPath(); ctx.arc(0, 0, node.radius, 0, Math.PI * 2); ctx.fill(); 
+                const fontSize = (node.isNumber ? 20 : 26) * scaleFactor;
                 ctx.font = `900 ${fontSize}px Fredoka`; ctx.fillStyle = node.isNumber ? node.color : 'black'; ctx.shadowBlur = 0; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(node.content, 0, 0); 
                 ctx.restore(); 
             });
         } else {
-            connections.forEach(conn => { ctx.globalAlpha = 1; ctx.strokeStyle = conn.color; ctx.lineWidth = 10 * scaleFactor; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(conn.x1, conn.y1); ctx.lineTo(conn.x2, conn.y2); ctx.stroke(); });
-            if (isDragging && activeNode) { ctx.globalAlpha = 1; ctx.strokeStyle = activeNode.isColor ? activeNode.content : (activeNode.isMath ? getNumberColor(activeNode.content) : '#94A3B8'); ctx.lineWidth = 6 * scaleFactor; ctx.lineCap = 'round'; ctx.setLineDash([8, 8]); ctx.beginPath(); ctx.moveTo(activeNode.x, activeNode.y); ctx.lineTo(mousePos.x, mousePos.y); ctx.stroke(); ctx.setLineDash([]); }
+            connections.forEach(conn => { ctx.globalAlpha = 1; ctx.strokeStyle = conn.color; ctx.lineWidth = 6 * scaleFactor; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(conn.x1, conn.y1); ctx.lineTo(conn.x2, conn.y2); ctx.stroke(); });
+            if (isDragging && activeNode) { ctx.globalAlpha = 1; ctx.strokeStyle = activeNode.isColor ? activeNode.content : (activeNode.isMath ? getNumberColor(activeNode.content) : '#94A3B8'); ctx.lineWidth = 4 * scaleFactor; ctx.lineCap = 'round'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(activeNode.x, activeNode.y); ctx.lineTo(mousePos.x, mousePos.y); ctx.stroke(); ctx.setLineDash([]); }
             [...nodes, ...targets].forEach(item => { 
                 ctx.save(); ctx.translate(item.x + (item.visualX || 0), item.y); ctx.scale(item.scale, item.scale); 
                 ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(0, 0, item.radius, 0, Math.PI * 2); ctx.fill(); 
                 if (item.isColor) { ctx.fillStyle = item.content; ctx.beginPath(); ctx.arc(0, 0, item.radius * 0.7, 0, Math.PI * 2); ctx.fill(); } 
                 else { 
                     const isMathExp = item.content.toString().includes('+');
-                    const fontSize = (isMathExp ? 22 : 40) * scaleFactor;
+                    const fontSize = (isMathExp ? 18 : 30) * scaleFactor;
                     ctx.font = `900 ${fontSize}px Fredoka`;
                     ctx.fillStyle = !isNaN(item.content) ? getNumberColor(item.content) : '#1e293b';
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(item.content, 0, 4); 
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(item.content, 0, 2); 
                 } 
-                if (item.matched) { ctx.strokeStyle = '#22C55E'; ctx.lineWidth = 5 * scaleFactor; ctx.beginPath(); ctx.moveTo(-item.radius*0.3, 0); ctx.lineTo(-item.radius*0.1, item.radius*0.2); ctx.lineTo(item.radius*0.3, -item.radius*0.25); ctx.stroke(); } 
+                if (item.matched) { ctx.strokeStyle = '#22C55E'; ctx.lineWidth = 3 * scaleFactor; ctx.beginPath(); ctx.moveTo(-item.radius*0.3, 0); ctx.lineTo(-item.radius*0.1, item.radius*0.2); ctx.lineTo(item.radius*0.3, -item.radius*0.2); ctx.stroke(); } 
                 ctx.restore(); 
             });
         }
@@ -569,34 +571,97 @@
         ctx.restore(); ctx.globalAlpha = 1; requestAnimationFrame(draw);
     }
 
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        let clientX, clientY;
+        if (e.touches && e.touches.length > 0) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; } 
+        else if (e.changedTouches && e.changedTouches.length > 0) { clientX = e.changedTouches[0].clientX; clientY = e.changedTouches[0].clientY; } 
+        else { clientX = e.clientX; clientY = e.clientY; }
+        return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
     function handleStart(e) {
         initAudio(); if (!isBgmMuted && bgmIndex === 0) startBGM();
         const pos = getPos(e);
-        if (currentConfig.type.startsWith('shoot')) { for (let i = movingItems.length - 1; i >= 0; i--) { const item = movingItems[i]; if (Math.hypot(item.x - pos.x, item.y - pos.y) < item.size * 1.5) { checkHit(item, i); return; } } }
-        else if (!currentConfig.type.startsWith('catch')) { activeNode = nodes.find(n => !n.matched && Math.hypot(n.x - pos.x, n.y - pos.y) < n.radius * 1.3); if (activeNode) { isDragging = true; sounds.pick(); gsap.to(activeNode, { scale: 1.2, duration: 0.3, ease: "back.out(2)" }); } }
-    }
-
-    function handleEnd() {
-        if (!isDragging || !activeNode) return;
-        if (currentConfig.type.startsWith('puzzle')) {
-            const slot = puzzleSlots.find(s => !s.matched && s.content === activeNode.content && Math.hypot(s.x - activeNode.x, s.y - activeNode.y) < 50 * scaleFactor);
-            if (slot) { slot.matched = true; activeNode.matched = true; createExplosion(slot.x, slot.y, activeNode.color || '#22C55E'); sounds.match(); score += 30; scoreEl.innerText = score; if (puzzleSlots.every(s => s.matched)) finishLevel(); } 
-            else { triggerItemShake(activeNode); }
-        } else {
-            const target = targets.find(t => !t.matched && Math.hypot(t.x - mousePos.x, t.y - mousePos.y) < t.radius * 1.5);
-            if (target && target.id === activeNode.id) { target.matched = true; activeNode.matched = true; let lineCol = activeNode.isColor ? activeNode.content : (!isNaN(target.content) ? getNumberColor(target.content) : '#3B82F6'); connections.push({ x1: activeNode.x, y1: activeNode.y, x2: target.x, y2: target.y, color: lineCol }); createExplosion(target.x, target.y, lineCol); sounds.match(); score += 25; scoreEl.innerText = score; gsap.to(activeNode, { scale: 1, duration: 0.2 }); if (nodes.filter(n => nodes.some(m => m.id === n.id)).every(n => n.matched)) finishLevel(); } 
-            else { triggerItemShake(activeNode); }
+        mousePos = pos;
+        
+        if (currentConfig.type.startsWith('shoot')) { 
+            for (let i = movingItems.length - 1; i >= 0; i--) { 
+                const item = movingItems[i]; 
+                if (Math.hypot(item.x - pos.x, item.y - pos.y) < item.size * 2.5) { 
+                    checkHit(item, i); 
+                    return; 
+                } 
+            } 
+        } else if (!currentConfig.type.startsWith('catch')) { 
+            activeNode = nodes.find(n => !n.matched && Math.hypot(n.x - pos.x, n.y - pos.y) < n.radius * 2); 
+            if (activeNode) { 
+                isDragging = true; 
+                sounds.pick(); 
+                gsap.to(activeNode, { scale: 1.2, duration: 0.2 }); 
+            } 
         }
-        isDragging = false; activeNode = null;
     }
 
-    function getPos(e) { const rect = canvas.getBoundingClientRect(); const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0); const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0); return { x: clientX - rect.left, y: clientY - rect.top }; }
-    window.addEventListener('mousemove', e => { mousePos = getPos(e); createTrail(mousePos.x, mousePos.y); if (isDragging && activeNode && currentConfig.type.startsWith('puzzle')) { activeNode.x = mousePos.x; activeNode.y = mousePos.y; } }, { passive: true });
-    window.addEventListener('touchmove', e => { mousePos = getPos(e); createTrail(mousePos.x, mousePos.y); if (isDragging && activeNode && currentConfig.type.startsWith('puzzle')) { activeNode.x = mousePos.x; activeNode.y = mousePos.y; } if(isDragging || (currentConfig && currentConfig.type.startsWith('catch'))) e.preventDefault(); }, { passive: false });
+    function handleMove(e) {
+        const pos = getPos(e);
+        mousePos = pos;
+        createTrail(pos.x, pos.y);
+        
+        if (isDragging && activeNode && currentConfig.type.startsWith('puzzle')) {
+            activeNode.x = pos.x;
+            activeNode.y = pos.y;
+        }
+        
+        if(isDragging || (currentConfig && currentConfig.type.startsWith('catch'))) {
+            if(e.cancelable) e.preventDefault();
+        }
+    }
+
+    function handleEnd(e) {
+        if (!isDragging || !activeNode) return;
+        
+        const pos = getPos(e);
+        if (currentConfig.type.startsWith('puzzle')) {
+            const slot = puzzleSlots.find(s => !s.matched && s.content === activeNode.content && Math.hypot(s.x - pos.x, s.y - pos.y) < 50 * scaleFactor);
+            if (slot) { 
+                slot.matched = true; 
+                activeNode.matched = true; 
+                createExplosion(slot.x, slot.y, activeNode.color || '#22C55E'); 
+                sounds.match(); 
+                score += 30; 
+                scoreEl.innerText = score; 
+                if (puzzleSlots.every(s => s.matched)) finishLevel(); 
+            } else { 
+                triggerItemShake(activeNode); 
+            }
+        } else {
+            const target = targets.find(t => !t.matched && Math.hypot(t.x - pos.x, t.y - pos.y) < t.radius * 2.2);
+            if (target && target.id === activeNode.id) { 
+                target.matched = true; 
+                activeNode.matched = true; 
+                let lineCol = activeNode.isColor ? activeNode.content : (!isNaN(target.content) ? getNumberColor(target.content) : '#3B82F6'); 
+                connections.push({ x1: activeNode.x, y1: activeNode.y, x2: target.x, y2: target.y, color: lineCol }); 
+                createExplosion(target.x, target.y, lineCol); 
+                sounds.match(); 
+                score += 25; 
+                scoreEl.innerText = score; 
+                gsap.to(activeNode, { scale: 1, duration: 0.2 }); 
+                if (nodes.filter(n => nodes.some(m => m.id === n.id)).every(n => n.matched)) finishLevel(); 
+            } else { 
+                triggerItemShake(activeNode); 
+            }
+        }
+        isDragging = false; 
+        activeNode = null;
+    }
+
+    window.addEventListener('mousemove', handleMove, { passive: true });
+    window.addEventListener('touchmove', handleMove, { passive: false });
     canvas.addEventListener('mousedown', handleStart);
-    canvas.addEventListener('touchstart', e => { handleStart(e); e.preventDefault(); }, { passive: false });
+    canvas.addEventListener('touchstart', handleStart, { passive: false });
     window.addEventListener('mouseup', handleEnd);
-    window.addEventListener('touchend', handleEnd);
+    window.addEventListener('touchend', handleEnd, { passive: false });
     
     document.getElementById('next-btn').onclick = () => { sounds.click(); currentLevel++; gsap.to('#message-box', { scale: 0.8, opacity: 0, duration: 0.3, onComplete: () => { document.getElementById('message-box').style.display = 'none'; document.getElementById('message-box').style.opacity = 1; initLevel(); }}); };
     document.getElementById('reset-btn').onclick = () => { sounds.click(); initLevel(); };
@@ -609,5 +674,3 @@
 </script>
 </body>
 </html>
-
-
