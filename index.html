@@ -3,7 +3,7 @@
 <head>
     <link rel="icon" type="image/png" href="favicon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dunia Permainan Edukasi</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,10 +18,15 @@
             touch-action: none;
             user-select: none;
             cursor: default; 
+            width: 100vw;
+            height: 100vh;
         }
         canvas { 
             display: block; 
             image-rendering: -webkit-optimize-contrast;
+            width: 100%;
+            height: 100%;
+            background-color: #F0F9FF; /* Konsistensi warna latar untuk cegah flicker */
         }
         
         #ui-layer {
@@ -33,8 +38,7 @@
             pointer-events: none;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 20px;
+            padding: 15px;
             z-index: 10;
         }
 
@@ -42,10 +46,11 @@
         
         .info-card {
             background: white;
-            border-radius: 20px;
-            padding: 10px 20px;
-            box-shadow: 0 6px 0px rgba(0,0,0,0.05);
-            border: 3px solid #E0F2FE;
+            border-radius: 15px;
+            padding: 8px 15px;
+            box-shadow: 0 4px 0px rgba(0,0,0,0.05);
+            border: 2px solid #E0F2FE;
+            white-space: nowrap;
         }
 
         #message-box {
@@ -54,16 +59,16 @@
             left: 50%;
             transform: translate(-50%, -50%) scale(0.8);
             background: white;
-            padding: 30px;
-            border-radius: 35px;
+            padding: 25px;
+            border-radius: 30px;
             text-align: center;
             box-shadow: 0 15px 0px #F1F5F9;
             display: none;
             pointer-events: auto;
             border: 6px solid #FBBF24;
             z-index: 100;
-            width: 85%;
-            max-width: 400px;
+            width: 90%;
+            max-width: 380px;
         }
 
         .btn-pop {
@@ -84,12 +89,18 @@
             border-bottom: 4px solid #94A3B8;
         }
 
+        .btn-reset-top {
+            background: #F87171;
+            border-bottom: 4px solid #B91C1C;
+        }
+
         @keyframes pulse-bg {
             0% { background-color: #F0F9FF; }
             50% { background-color: #DCFCE7; }
             100% { background-color: #F0F9FF; }
         }
         .win-bg { animation: pulse-bg 1s infinite; }
+        .win-bg canvas { animation: pulse-bg 1s infinite; }
         
         .float-anim {
             animation: floating 3s ease-in-out infinite;
@@ -98,61 +109,64 @@
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
         }
+
+        @media (max-width: 640px) {
+            .info-card { padding: 5px 10px; font-size: 0.75rem; }
+            #instruction-container { max-width: 70%; }
+        }
     </style>
 </head>
 <body>
 
 <div id="ui-layer">
-    <div class="flex flex-col items-center gap-3">
-        <div class="flex justify-between w-full max-w-md items-start">
-            <div class="flex gap-2">
-                <button id="bgm-toggle" class="interactive btn-pop btn-settings p-3 rounded-xl shadow-md flex items-center justify-center">
-                    <span id="bgm-icon">🎵</span>
-                </button>
-                <button id="sfx-toggle" class="interactive btn-pop btn-settings p-3 rounded-xl shadow-md flex items-center justify-center">
-                    <span id="sfx-icon">🔊</span>
-                </button>
-            </div>
-            
-            <div class="flex gap-3">
-                <div id="lvl-card" class="info-card text-xl font-black text-blue-600">
-                    LEVEL: <span id="level-display">1</span>
-                </div>
-                <div id="scr-card" class="info-card text-xl font-black text-orange-500">
-                    ⭐ <span id="score">0</span>
-                </div>
-            </div>
+    <div class="flex justify-between items-start w-full">
+        <div class="flex gap-1 sm:gap-2">
+            <button id="bgm-toggle" class="interactive btn-pop btn-settings p-2 sm:p-3 rounded-xl shadow-md flex items-center justify-center">
+                <span id="bgm-icon" class="text-xs sm:text-base">🎵</span>
+            </button>
+            <button id="sfx-toggle" class="interactive btn-pop btn-settings p-2 sm:p-3 rounded-xl shadow-md flex items-center justify-center">
+                <span id="sfx-icon" class="text-xs sm:text-base">🔊</span>
+            </button>
         </div>
-        
-        <div class="info-card text-lg font-bold text-slate-700 text-center w-full max-w-sm shadow-md mt-2">
-            <span id="instruction">Ayo Bermain!</span>
+
+        <div class="flex items-center gap-1 sm:gap-2">
+            <div id="lvl-card" class="info-card font-black text-blue-600">
+                Lvl: <span id="level-display">1</span>
+            </div>
+            <div id="scr-card" class="info-card font-black text-orange-500">
+                ⭐ <span id="score">0</span>
+            </div>
+            <button id="reset-btn" class="interactive btn-pop btn-reset-top p-2 sm:p-3 rounded-xl shadow-md flex items-center justify-center">
+                <span class="text-xs sm:text-base">🔄</span>
+            </button>
         </div>
     </div>
     
-    <div class="flex justify-center mb-2">
-        <button id="reset-btn" class="interactive btn-pop py-2 px-6 rounded-full text-sm shadow-lg">
-            ULANGI 🔄
-        </button>
+    <div class="flex flex-col items-center mt-3">
+        <div id="instruction-container" class="info-card text-slate-700 text-center w-full max-w-md shadow-md">
+            <div id="instruction" class="font-bold text-xs sm:text-sm">Ayo Bermain!</div>
+        </div>
     </div>
 </div>
 
 <div id="message-box">
-    <div class="text-6xl mb-4 float-anim">🏆</div>
-    <h1 id="msg-title" class="text-3xl font-black text-yellow-500 mb-2">HEBAT! 🌟</h1>
-    <p id="msg-body" class="text-lg text-slate-500 mb-6 font-bold">Kamu pintar sekali!</p>
-    <button id="next-btn" class="btn-pop py-3 px-10 rounded-full text-xl w-full">LANJUT! 🚀</button>
+    <div class="text-5xl sm:text-6xl mb-4 float-anim">🏆</div>
+    <h1 id="msg-title" class="text-2xl sm:text-3xl font-black text-yellow-500 mb-2">HEBAT! 🌟</h1>
+    <p id="msg-body" class="text-base sm:text-lg text-slate-500 mb-6 font-bold">Kamu pintar sekali!</p>
+    <button id="next-btn" class="btn-pop py-3 px-10 rounded-full text-lg w-full">LANJUT! 🚀</button>
 </div>
 
 <canvas id="gameCanvas"></canvas>
 
 <script>
-    // --- VARIABEL GLOBAL ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const scoreEl = document.getElementById('score');
     const levelEl = document.getElementById('level-display');
     const instructionEl = document.getElementById('instruction');
 
+    let width, height, scaleFactor;
+    
     const gameColors = ['#FF4D4D', '#4D94FF', '#4DFF88', '#FBBF24', '#A855F7', '#EC4899', '#06B6D4'];
     const gameShapes = ['🔴', '🟦', '⭐', '🔺', '🟡', '🍀', '💎', '🌙'];
     const gameNumbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15'];
@@ -171,7 +185,6 @@
         { l: '🐼', r: '🎋' }, { l: '🐨', r: '🍃' }, { l: '🐝', r: '🌸' }, { l: '🐕', r: '🦴' }
     ];
 
-    let width, height;
     let nodes = [];
     let targets = [];
     let connections = [];
@@ -193,7 +206,6 @@
     let targetValue = null; 
     let canvasOffset = { x: 0, y: 0 };
 
-    // --- AUDIO ---
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
     let isSfxMuted = false;
@@ -257,7 +269,6 @@
         playNote();
     }
 
-    // --- LOGIKA LEVEL ---
     const gamePool = [
         'color-match', 'animal-food', 'puzzle-shape', 'puzzle-number', 
         'puzzle-image', 'catch-color', 'shoot-color', 'shoot-shape', 'catch-number'
@@ -265,21 +276,16 @@
 
     function getLevelConfig(type) {
         if (type === 'math-transition') return generateMathChallenge(true);
-        
         const difficulty = Math.floor(currentLevel / 3); 
         const itemCount = Math.min(3 + difficulty, 6);
 
         switch(type) {
             case 'color-match':
                 const selectedColors = [...gameColors].sort(() => Math.random() - 0.5).slice(0, 3);
-                return { type: 'color', title: "Pasangkan Warna Sama 🎨", items: selectedColors.map((c, i) => ({
-                    id: i, l: c, r: c, isColor: true
-                }))};
+                return { type: 'color', title: "Pasangkan Warna Sama 🎨", items: selectedColors.map((c, i) => ({ id: i, l: c, r: c, isColor: true }))};
             case 'animal-food':
                 const selectedPairs = [...animalPairs].sort(() => Math.random() - 0.5).slice(0, 3);
-                return { type: 'animal-food', title: "Hewan Makan Apa? 🍎", items: selectedPairs.map((p, i) => ({
-                    id: i, l: p.l, r: p.r, isText: true
-                }))};
+                return { type: 'animal-food', title: "Hewan Makan Apa? 🍎", items: selectedPairs.map((p, i) => ({ id: i, l: p.l, r: p.r, isText: true }))};
             case 'puzzle-shape':
                 return { type: 'puzzle-shape', title: "Lengkapi Puzzle Bentuk! 🧩", items: [...gameShapes].sort(() => Math.random() - 0.5).slice(0, itemCount) };
             case 'puzzle-number':
@@ -302,76 +308,46 @@
     function generateMathChallenge(isTransition) {
         const leftItems = []; const rightItems = [];
         const maxVal = Math.min(5 + currentLevel, 20);
-        
         let a = Math.floor(Math.random() * (maxVal/2)) + 1; 
         let b = Math.floor(Math.random() * (maxVal/2)) + 1; 
         let result = a + b; 
-        
         leftItems.push({ id: 0, l: `${a} + ${b}`, isMath: true });
         rightItems.push({ id: 0, r: `${result}`, isMath: true });
-        
         let decoy;
-        do {
-            decoy = Math.floor(Math.random() * maxVal) + 1;
-        } while (decoy === result);
-        
+        do { decoy = Math.floor(Math.random() * maxVal) + 1; } while (decoy === result);
         rightItems.push({ id: 99, r: `${decoy}`, isMath: true });
-
-        return { 
-            type: 'math', 
-            title: isTransition ? `Bonus Berhitung! 🔢` : `Pilih Jawaban yang Benar! ➕`, 
-            leftItems: leftItems, 
-            rightItems: rightItems.sort(() => Math.random() - 0.5) 
-        };
+        return { type: 'math', title: isTransition ? `Bonus Berhitung! 🔢` : `Pilih Jawaban yang Benar! ➕`, leftItems: leftItems, rightItems: rightItems.sort(() => Math.random() - 0.5) };
     }
 
-    // --- VFX ---
     function createTrail(x, y) {
         const hue = (frame * 5) % 360;
-        trailParticles.push({
-            x, y, vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
-            size: Math.random() * 8 + 4, alpha: 1, color: `hsl(${hue}, 90%, 65%)`
-        });
+        trailParticles.push({ x, y, vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, size: (Math.random() * 6 + 3) * scaleFactor, alpha: 1, color: `hsl(${hue}, 90%, 65%)` });
     }
 
     function createExplosion(x, y, color) {
         for (let i = 0; i < 20; i++) {
-            particles.push({
-                x, y, vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
-                size: Math.random() * 8 + 4, alpha: 1, decay: Math.random() * 0.02 + 0.02, color: color || '#FFD700'
-            });
+            particles.push({ x, y, vx: (Math.random() - 0.5) * 10 * scaleFactor, vy: (Math.random() - 0.5) * 10 * scaleFactor, size: (Math.random() * 6 + 3) * scaleFactor, alpha: 1, decay: Math.random() * 0.02 + 0.02, color: color || '#FFD700' });
         }
     }
 
     function triggerScreenShake(intensity = 10) {
-        gsap.to(canvasOffset, {
-            x: intensity, y: intensity, duration: 0.05, repeat: 5, yoyo: true,
-            onComplete: () => { canvasOffset.x = 0; canvasOffset.y = 0; }
-        });
+        gsap.to(canvasOffset, { x: intensity, y: intensity, duration: 0.05, repeat: 5, yoyo: true, onComplete: () => { canvasOffset.x = 0; canvasOffset.y = 0; } });
     }
 
     function triggerItemShake(node) {
-        sounds.error();
-        createExplosion(node.x, node.y, '#94A3B8');
-        triggerScreenShake(6);
-        gsap.to(node, {
-            visualX: 12, duration: 0.05, repeat: 5, yoyo: true,
-            onComplete: () => {
-                node.visualX = 0;
-                if (currentConfig.type.startsWith('puzzle')) {
-                    gsap.to(node, { x: node.homeX, y: node.homeY, scale: 1, duration: 0.5, ease: "back.out(1.2)" });
-                } else {
-                    gsap.to(node, { scale: 1, duration: 0.3 });
-                }
-            }
-        });
+        sounds.error(); createExplosion(node.x, node.y, '#94A3B8'); triggerScreenShake(6);
+        gsap.to(node, { visualX: 12, duration: 0.05, repeat: 5, yoyo: true, onComplete: () => { node.visualX = 0; if (currentConfig.type.startsWith('puzzle')) { gsap.to(node, { x: node.homeX, y: node.homeY, scale: 1, duration: 0.5, ease: "back.out(1.2)" }); } else { gsap.to(node, { scale: 1, duration: 0.3 }); } } });
     }
 
-    // --- ENGINE ---
     function resize() {
-        width = window.innerWidth; height = window.innerHeight;
-        canvas.width = width; canvas.height = height;
-        initLevel();
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        scaleFactor = Math.min(width, height) / 500;
+        if (scaleFactor > 1.4) scaleFactor = 1.4;
+        if (scaleFactor < 0.6) scaleFactor = 0.6;
+        initLevel(currentConfig ? currentConfig.type : null);
     }
 
     function initLevel(forcedType = null) {
@@ -380,7 +356,7 @@
         document.body.classList.remove('win-bg');
         
         let nextType;
-        if (forcedType) nextType = forcedType;
+        if (forcedType && !levelComplete) nextType = forcedType;
         else {
             do { nextType = gamePool[Math.floor(Math.random() * gamePool.length)]; } while (nextType === lastGameType);
             lastGameType = nextType;
@@ -399,15 +375,15 @@
             const shuffledItems = [...items].sort(() => Math.random() - 0.5);
             
             items.forEach((item, i) => {
-                const spacing = width < 500 ? 70 : 120;
+                const spacing = (width < 600 ? 55 : 100) * scaleFactor;
                 const startX = width/2 - ((items.length-1) * spacing)/2;
                 let itemColor = getNumberColor(item);
                 puzzleSlots.push({ 
                     x: startX + i * spacing, 
-                    y: height/2 - 40, 
+                    y: height/2 - 20, 
                     content: item, 
                     matched: false, 
-                    radius: currentConfig.isNumber ? (width < 500 ? 30 : 50) : (width < 500 ? 40 : 60), 
+                    radius: (currentConfig.isNumber ? 30 : 35) * scaleFactor, 
                     color: itemColor, 
                     isNumber: !!currentConfig.isNumber 
                 });
@@ -417,10 +393,10 @@
                 const pieceSpacing = width / (items.length + 1);
                 let itemColor = getNumberColor(item);
                 nodes.push({ 
-                    x: pieceSpacing * (i + 1), y: height - 120, 
-                    homeX: pieceSpacing * (i + 1), homeY: height - 120, 
+                    x: pieceSpacing * (i + 1), y: height - 120 * scaleFactor, 
+                    homeX: pieceSpacing * (i + 1), homeY: height - 120 * scaleFactor, 
                     content: item, matched: false, 
-                    radius: currentConfig.isNumber ? (width < 500 ? 30 : 50) : (width < 500 ? 35 : 55), 
+                    radius: (currentConfig.isNumber ? 28 : 32) * scaleFactor, 
                     scale: 0, 
                     offset: Math.random() * Math.PI * 2, 
                     color: itemColor, 
@@ -429,22 +405,21 @@
             });
             gsap.to(nodes, { scale: 1, duration: 0.8, stagger: 0.1, ease: "back.out(1.7)" });
         } else {
-            const radius = width < 500 ? 45 : 65;
+            const radius = (width < 600 ? 35 : 55) * scaleFactor;
             if (currentConfig.type === 'math') {
                 const lStartY = height / 2 + 20;
                 currentConfig.leftItems.forEach((item, i) => {
                     nodes.push({ x: width * 0.3, y: lStartY, baseY: lStartY, content: item.l, id: item.id, matched: false, scale: 0, offset: Math.random() * Math.PI * 2, radius, visualX: 0, isMath: true });
                 });
-                
-                const rStartY = height / 2 - 60;
-                const rSpacing = width < 500 ? 120 : 160;
+                const rStartY = height / 2 - (currentConfig.rightItems.length > 1 ? 60 : 0);
+                const rSpacing = (width < 600 ? 100 : 140) * scaleFactor;
                 currentConfig.rightItems.forEach((item, i) => {
                     targets.push({ x: width * 0.7, y: rStartY + i * rSpacing, baseY: rStartY + i * rSpacing, content: item.r, id: item.id, matched: false, scale: 0, offset: Math.random() * Math.PI * 2, radius: radius + 5, isMath: true });
                 });
             } else {
                 const count = currentConfig.items.length;
-                const spacing = width < 500 ? 120 : 180;
-                const startY = (height - (count - 1) * spacing) / 2 + 30;
+                const spacing = (width < 600 ? 90 : 140) * scaleFactor;
+                const startY = (height - (count - 1) * spacing) / 2 + 40;
                 currentConfig.items.forEach((item, i) => {
                     nodes.push({ x: width * 0.25, y: startY + i * spacing, baseY: startY + i * spacing, content: item.l, id: item.id, matched: false, isColor: !!item.isColor, scale: 0, offset: Math.random() * Math.PI * 2, radius, visualX: 0 });
                 });
@@ -467,18 +442,22 @@
         frame++;
         if (currentConfig && (currentConfig.type.startsWith('catch') || currentConfig.type.startsWith('shoot')) && !levelComplete) {
             const isShootMode = currentConfig.type.startsWith('shoot');
-            const spawnRate = Math.max(25, (isShootMode ? 45 : 55) - (currentLevel * 2));
+            const spawnRate = Math.max(20, (isShootMode ? 40 : 50) - (currentLevel * 2));
             if (frame % spawnRate === 0) {
                 let value, color, isEmoji = false;
                 if (currentConfig.type.includes('color')) { value = gameColors[Math.floor(Math.random() * gameColors.length)]; color = value; }
                 else if (currentConfig.type.includes('shape')) { value = gameShapes[Math.floor(Math.random() * gameShapes.length)]; color = '#4D94FF'; isEmoji = true; }
                 else { const idx = Math.floor(Math.random() * 5); value = gameNumbers[idx]; color = numberColors[idx]; }
-                movingItems.push({ x: Math.random() * (width - 100) + 50, y: isShootMode ? height + 50 : -50, vy: isShootMode ? -(Math.random() * 2 + 2 + currentLevel*0.1) : (Math.random() * 2 + 3 + currentLevel*0.1), vx: isShootMode ? Math.sin(frame * 0.05) * 1.5 : 0, value, color, size: 35, isEmoji, rotation: (Math.random() - 0.5) * 0.05 });
+                movingItems.push({ x: Math.random() * (width - 100) + 50, y: isShootMode ? height + 50 : -50, vy: (isShootMode ? -1 : 1) * (Math.random() * 2 + 2 + currentLevel*0.1) * scaleFactor, vx: isShootMode ? Math.sin(frame * 0.05) * 1.5 : 0, value, color, size: 30 * scaleFactor, isEmoji, rotation: (Math.random() - 0.5) * 0.05 });
             }
             for (let i = movingItems.length - 1; i >= 0; i--) {
                 const item = movingItems[i]; item.y += item.vy; item.x += item.vx;
                 if (isShootMode) { if (item.y < -100) movingItems.splice(i, 1); }
-                else { if (item.y + item.size > height - 80 && item.x > mousePos.x - 60 && item.x < mousePos.x + 60) checkHit(item, i); else if (item.y > height + 50) movingItems.splice(i, 1); }
+                else { 
+                    const basketW = 100 * scaleFactor;
+                    if (item.y + item.size > height - 70 && item.x > mousePos.x - basketW/2 && item.x < mousePos.x + basketW/2) checkHit(item, i); 
+                    else if (item.y > height + 50) movingItems.splice(i, 1); 
+                }
             }
         } else if (currentConfig && currentConfig.type.startsWith('puzzle')) {
             nodes.forEach(n => { if (!n.matched && n !== activeNode) n.y = n.homeY + Math.sin(frame * 0.04 + n.offset) * 5; });
@@ -487,7 +466,7 @@
             targets.forEach(t => { if (!t.matched) t.y = t.baseY + Math.sin(frame * 0.04 + t.offset) * 8; });
         }
         trailParticles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.alpha -= 0.02; if (p.alpha <= 0) trailParticles.splice(i, 1); });
-        particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.alpha -= p.decay; if (p.alpha <= 0) particles.splice(i, 1); });
+        particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.vy += 0.2 * scaleFactor; p.alpha -= p.decay; if (p.alpha <= 0) particles.splice(i, 1); });
     }
 
     function checkHit(item, index) {
@@ -497,18 +476,13 @@
     }
 
     function finishLevel() {
-        levelComplete = true; 
-        sounds.win(); 
-        document.body.classList.add('win-bg');
-        
+        levelComplete = true; sounds.win(); document.body.classList.add('win-bg');
         setTimeout(() => {
             if (isMathTransition) {
                 document.getElementById('msg-title').innerText = "LUAR BIASA! 🌈";
                 document.getElementById('msg-body').innerText = "Kamu berhasil melewati rintangan!";
                 gsap.to('#message-box', { display: 'block', scale: 1, duration: 0.5, ease: "back.out(1.7)" });
-            } else {
-                initLevel('math-transition');
-            }
+            } else { initLevel('math-transition'); }
         }, 600);
     }
 
@@ -516,101 +490,83 @@
         update();
         ctx.save();
         ctx.translate(canvasOffset.x, canvasOffset.y);
-        ctx.fillStyle = '#f0f9ff'; ctx.fillRect(-20, -20, width+40, height+40);
+        
+        // Perbaikan flicker: Selalu gunakan fillStyle dengan warna solid, bukan clearRect murni jika background CSS aktif
+        ctx.fillStyle = levelComplete ? '#DCFCE7' : '#F0F9FF'; 
+        ctx.fillRect(0, 0, width, height);
 
         trailParticles.forEach(p => { ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.alpha, 0, Math.PI * 2); ctx.fill(); });
 
         if (currentConfig && (currentConfig.type.startsWith('catch') || currentConfig.type.startsWith('shoot'))) {
             ctx.globalAlpha = 1;
-            if (!currentConfig.type.startsWith('shoot')) { ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.roundRect(mousePos.x - 60, height - 70, 120, 50, [5, 5, 20, 20]); ctx.fill(); }
-            ctx.fillStyle = '#1e293b'; ctx.font = 'bold 24px Fredoka'; ctx.textAlign = 'center';
+            if (!currentConfig.type.startsWith('shoot')) { 
+                const basketW = 100 * scaleFactor;
+                ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.roundRect(mousePos.x - basketW/2, height - 60, basketW, 40, [5, 5, 20, 20]); ctx.fill(); 
+            }
+            ctx.fillStyle = '#1e293b'; ctx.font = `bold ${18 * scaleFactor}px Fredoka`; ctx.textAlign = 'center';
             let targetLabel = currentConfig.type.startsWith('shoot') ? "TEMBAK: " : "TANGKAP: ";
             
             if (currentConfig.type.includes('color')) { 
-                ctx.fillText(targetLabel, width/2 - 20, height-130); 
-                ctx.fillStyle = targetValue; ctx.beginPath(); ctx.arc(width/2 + 70, height-138, 18, 0, Math.PI * 2); ctx.fill(); 
+                ctx.fillText(targetLabel, width/2 - 20, height - 120 * scaleFactor); 
+                ctx.fillStyle = targetValue; ctx.beginPath(); ctx.arc(width/2 + 50, height - 126 * scaleFactor, 15 * scaleFactor, 0, Math.PI * 2); ctx.fill(); 
             } else if (currentConfig.type.includes('number')) { 
-                ctx.fillText(targetLabel, width/2 - 20, height-130); 
-                ctx.fillStyle = getNumberColor(targetValue); 
-                ctx.font = '900 45px Fredoka'; 
-                ctx.fillText(targetValue, width/2 + 65, height-128); 
+                ctx.fillText(targetLabel, width/2 - 20, height - 120 * scaleFactor); 
+                ctx.fillStyle = getNumberColor(targetValue); ctx.font = `900 ${30 * scaleFactor}px Fredoka`; ctx.fillText(targetValue, width/2 + 50, height - 118 * scaleFactor); 
             } else { 
-                ctx.fillText(targetLabel + targetValue, width/2, height-130); 
+                ctx.fillText(targetLabel + targetValue, width/2, height - 120 * scaleFactor); 
             }
 
-            // TAMPILKAN INFORMASI JUMLAH
-            ctx.fillStyle = '#64748B';
-            ctx.font = 'bold 18px Fredoka';
-            ctx.fillText(`${progressCounter} / ${currentConfig.targetCount}`, width/2, height - 95);
+            ctx.fillStyle = '#64748B'; ctx.font = `bold ${14 * scaleFactor}px Fredoka`;
+            ctx.fillText(`${progressCounter} / ${currentConfig.targetCount}`, width/2, height - 90 * scaleFactor);
 
             movingItems.forEach(item => { 
                 ctx.save(); ctx.translate(item.x, item.y); ctx.rotate(frame * item.rotation); 
-                if (currentConfig.type.includes('color')) { 
-                    ctx.fillStyle = item.color; ctx.beginPath(); ctx.arc(0, 0, item.size, 0, Math.PI * 2); ctx.fill(); 
-                } else if (item.isEmoji || currentConfig.type.includes('shape')) { 
-                    ctx.font = '55px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(item.value, 0, 0); 
-                } else { 
-                    ctx.font = '900 65px Fredoka'; 
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
-                    ctx.fillStyle = item.color; 
-                    ctx.fillText(item.value, 0, 0); 
-                } 
+                if (currentConfig.type.includes('color')) { ctx.fillStyle = item.color; ctx.beginPath(); ctx.arc(0, 0, item.size, 0, Math.PI * 2); ctx.fill(); } 
+                else if (item.isEmoji || currentConfig.type.includes('shape')) { ctx.font = `${40 * scaleFactor}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(item.value, 0, 0); } 
+                else { ctx.font = `900 ${45 * scaleFactor}px Fredoka`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = item.color; ctx.fillText(item.value, 0, 0); } 
                 ctx.restore(); 
             });
         } else if (currentConfig && currentConfig.type.startsWith('puzzle')) {
             puzzleSlots.forEach(slot => { 
                 ctx.save(); ctx.translate(slot.x, slot.y); 
-                const fontSize = width < 500 ? (slot.isNumber ? '40px' : '50px') : (slot.isNumber ? '70px' : '80px');
+                const fontSize = (slot.isNumber ? 30 : 40) * scaleFactor;
                 if (!slot.matched) { 
                     ctx.globalAlpha = 0.2; ctx.fillStyle = '#94A3B8'; ctx.beginPath(); ctx.arc(0, 0, slot.radius, 0, Math.PI * 2); ctx.fill(); 
-                    ctx.font = `900 ${fontSize} Fredoka`; 
-                    ctx.fillStyle = slot.isNumber ? slot.color : '#64748B'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(slot.content, 0, 0); 
+                    ctx.font = `900 ${fontSize}px Fredoka`; ctx.fillStyle = slot.isNumber ? slot.color : '#64748B'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(slot.content, 0, 0); 
                 } else { 
-                    ctx.globalAlpha = 1; ctx.fillStyle = slot.isNumber ? slot.color : '#22C55E'; ctx.beginPath(); ctx.arc(0, 0, slot.radius + 6, 0, Math.PI * 2); ctx.fill(); 
+                    ctx.globalAlpha = 1; ctx.fillStyle = slot.isNumber ? slot.color : '#22C55E'; ctx.beginPath(); ctx.arc(0, 0, slot.radius + 4, 0, Math.PI * 2); ctx.fill(); 
                     ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(0, 0, slot.radius, 0, Math.PI * 2); ctx.fill(); 
-                    ctx.font = `900 ${fontSize} Fredoka`; 
-                    ctx.fillStyle = slot.isNumber ? slot.color : 'black'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(slot.content, 0, 0); 
+                    ctx.font = `900 ${fontSize}px Fredoka`; ctx.fillStyle = slot.isNumber ? slot.color : 'black'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(slot.content, 0, 0); 
                 } ctx.restore(); 
             });
             nodes.forEach(node => { 
                 if (node.matched) return; 
                 ctx.save(); ctx.translate(node.x + (node.visualX || 0), node.y); ctx.scale(node.scale, node.scale); 
                 ctx.fillStyle = 'white'; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.1)'; ctx.beginPath(); ctx.arc(0, 0, node.radius, 0, Math.PI * 2); ctx.fill(); 
-                const fontSize = width < 500 ? (node.isNumber ? '35px' : '40px') : (node.isNumber ? '70px' : '65px');
-                ctx.font = `900 ${fontSize} Fredoka`; 
-                ctx.fillStyle = node.isNumber ? node.color : 'black'; ctx.shadowBlur = 0; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(node.content, 0, 0); 
+                const fontSize = (node.isNumber ? 28 : 35) * scaleFactor;
+                ctx.font = `900 ${fontSize}px Fredoka`; ctx.fillStyle = node.isNumber ? node.color : 'black'; ctx.shadowBlur = 0; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(node.content, 0, 0); 
                 ctx.restore(); 
             });
         } else {
-            connections.forEach(conn => { ctx.globalAlpha = 1; ctx.strokeStyle = conn.color; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(conn.x1, conn.y1); ctx.lineTo(conn.x2, conn.y2); ctx.stroke(); });
-            if (isDragging && activeNode) { ctx.globalAlpha = 1; ctx.strokeStyle = activeNode.isColor ? activeNode.content : (activeNode.isMath ? getNumberColor(activeNode.content) : '#94A3B8'); ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.setLineDash([10, 10]); ctx.beginPath(); ctx.moveTo(activeNode.x, activeNode.y); ctx.lineTo(mousePos.x, mousePos.y); ctx.stroke(); ctx.setLineDash([]); }
+            connections.forEach(conn => { ctx.globalAlpha = 1; ctx.strokeStyle = conn.color; ctx.lineWidth = 10 * scaleFactor; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(conn.x1, conn.y1); ctx.lineTo(conn.x2, conn.y2); ctx.stroke(); });
+            if (isDragging && activeNode) { ctx.globalAlpha = 1; ctx.strokeStyle = activeNode.isColor ? activeNode.content : (activeNode.isMath ? getNumberColor(activeNode.content) : '#94A3B8'); ctx.lineWidth = 6 * scaleFactor; ctx.lineCap = 'round'; ctx.setLineDash([8, 8]); ctx.beginPath(); ctx.moveTo(activeNode.x, activeNode.y); ctx.lineTo(mousePos.x, mousePos.y); ctx.stroke(); ctx.setLineDash([]); }
             [...nodes, ...targets].forEach(item => { 
                 ctx.save(); ctx.translate(item.x + (item.visualX || 0), item.y); ctx.scale(item.scale, item.scale); 
                 ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(0, 0, item.radius, 0, Math.PI * 2); ctx.fill(); 
-                if (item.isColor) { 
-                    ctx.fillStyle = item.content; ctx.beginPath(); ctx.arc(0, 0, item.radius * 0.7, 0, Math.PI * 2); ctx.fill(); 
-                } else { 
-                    const isMathExpression = item.content.toString().includes('+');
-                    const isRawNumber = !isNaN(item.content);
-                    if (isMathExpression) {
-                        ctx.font = `900 ${width < 500 ? '32px' : '48px'} Fredoka`;
-                        ctx.fillStyle = '#1e293b';
-                    } else if (isRawNumber) {
-                        ctx.font = `900 ${width < 500 ? '45px' : '70px'} Fredoka`;
-                        ctx.fillStyle = getNumberColor(item.content);
-                    } else {
-                        ctx.font = `bold ${width < 500 ? '40px' : '60px'} serif`;
-                        ctx.fillStyle = '#1e293b';
-                    }
+                if (item.isColor) { ctx.fillStyle = item.content; ctx.beginPath(); ctx.arc(0, 0, item.radius * 0.7, 0, Math.PI * 2); ctx.fill(); } 
+                else { 
+                    const isMathExp = item.content.toString().includes('+');
+                    const fontSize = (isMathExp ? 22 : 40) * scaleFactor;
+                    ctx.font = `900 ${fontSize}px Fredoka`;
+                    ctx.fillStyle = !isNaN(item.content) ? getNumberColor(item.content) : '#1e293b';
                     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(item.content, 0, 4); 
                 } 
-                if (item.matched) { ctx.strokeStyle = '#22C55E'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-item.radius*0.3, 0); ctx.lineTo(-item.radius*0.1, item.radius*0.2); ctx.lineTo(item.radius*0.3, -item.radius*0.25); ctx.stroke(); } 
+                if (item.matched) { ctx.strokeStyle = '#22C55E'; ctx.lineWidth = 5 * scaleFactor; ctx.beginPath(); ctx.moveTo(-item.radius*0.3, 0); ctx.lineTo(-item.radius*0.1, item.radius*0.2); ctx.lineTo(item.radius*0.3, -item.radius*0.25); ctx.stroke(); } 
                 ctx.restore(); 
             });
         }
         particles.forEach(p => { ctx.globalAlpha = Math.max(0, p.alpha); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); });
-        ctx.restore();
-        ctx.globalAlpha = 1; requestAnimationFrame(draw);
+        ctx.restore(); ctx.globalAlpha = 1; requestAnimationFrame(draw);
     }
 
     function handleStart(e) {
@@ -623,14 +579,12 @@
     function handleEnd() {
         if (!isDragging || !activeNode) return;
         if (currentConfig.type.startsWith('puzzle')) {
-            const slot = puzzleSlots.find(s => !s.matched && s.content === activeNode.content && Math.hypot(s.x - activeNode.x, s.y - activeNode.y) < 70);
+            const slot = puzzleSlots.find(s => !s.matched && s.content === activeNode.content && Math.hypot(s.x - activeNode.x, s.y - activeNode.y) < 50 * scaleFactor);
             if (slot) { slot.matched = true; activeNode.matched = true; createExplosion(slot.x, slot.y, activeNode.color || '#22C55E'); sounds.match(); score += 30; scoreEl.innerText = score; if (puzzleSlots.every(s => s.matched)) finishLevel(); } 
             else { triggerItemShake(activeNode); }
         } else {
             const target = targets.find(t => !t.matched && Math.hypot(t.x - mousePos.x, t.y - mousePos.y) < t.radius * 1.5);
-            if (target && target.id === activeNode.id) { target.matched = true; activeNode.matched = true; 
-                let lineCol = activeNode.isColor ? activeNode.content : (activeNode.isMath ? getNumberColor(target.content) : '#3B82F6'); 
-                connections.push({ x1: activeNode.x, y1: activeNode.y, x2: target.x, y2: target.y, color: lineCol }); createExplosion(target.x, target.y, lineCol); sounds.match(); score += 25; scoreEl.innerText = score; gsap.to(activeNode, { scale: 1, duration: 0.2 }); if (nodes.filter(n => nodes.some(m => m.id === n.id)).every(n => n.matched)) finishLevel(); } 
+            if (target && target.id === activeNode.id) { target.matched = true; activeNode.matched = true; let lineCol = activeNode.isColor ? activeNode.content : (!isNaN(target.content) ? getNumberColor(target.content) : '#3B82F6'); connections.push({ x1: activeNode.x, y1: activeNode.y, x2: target.x, y2: target.y, color: lineCol }); createExplosion(target.x, target.y, lineCol); sounds.match(); score += 25; scoreEl.innerText = score; gsap.to(activeNode, { scale: 1, duration: 0.2 }); if (nodes.filter(n => nodes.some(m => m.id === n.id)).every(n => n.matched)) finishLevel(); } 
             else { triggerItemShake(activeNode); }
         }
         isDragging = false; activeNode = null;
@@ -644,20 +598,16 @@
     window.addEventListener('mouseup', handleEnd);
     window.addEventListener('touchend', handleEnd);
     
-    document.getElementById('next-btn').onclick = () => { 
-        sounds.click(); currentLevel++; 
-        gsap.to('#message-box', { scale: 0.8, opacity: 0, duration: 0.3, onComplete: () => { 
-            document.getElementById('message-box').style.display = 'none'; 
-            document.getElementById('message-box').style.opacity = 1; initLevel(); 
-        }}); 
-    };
-    
+    document.getElementById('next-btn').onclick = () => { sounds.click(); currentLevel++; gsap.to('#message-box', { scale: 0.8, opacity: 0, duration: 0.3, onComplete: () => { document.getElementById('message-box').style.display = 'none'; document.getElementById('message-box').style.opacity = 1; initLevel(); }}); };
     document.getElementById('reset-btn').onclick = () => { sounds.click(); initLevel(); };
     document.getElementById('bgm-toggle').onclick = () => { isBgmMuted = !isBgmMuted; document.getElementById('bgm-icon').innerText = isBgmMuted ? "🔇" : "🎵"; if (!isBgmMuted) { initAudio(); startBGM(); } };
     document.getElementById('sfx-toggle').onclick = () => { isSfxMuted = !isSfxMuted; document.getElementById('sfx-icon').innerText = isSfxMuted ? "🔇" : "🔊"; };
-    window.addEventListener('resize', resize); resize(); draw();
+    
+    window.addEventListener('resize', resize); 
+    resize(); 
+    draw();
 </script>
 </body>
-
 </html>
+
 
